@@ -1,3 +1,6 @@
+import os
+from datetime import datetime, timezone
+
 import pandas as pd
 import pydeck as pdk
 import streamlit as st
@@ -25,6 +28,9 @@ def main():
 
     # Load data and prepare sidebar options
     df = load_trips()
+    mtime = os.path.getmtime(TRIPS_PATH)
+    updated_at = datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%d")
+    st.sidebar.caption(f"Data updated: {updated_at}")
     sidebar_options = ["All"] + sorted(df["agency_name"].unique())
     selected_operator = st.sidebar.radio("Vendor", options=sidebar_options)
     vendor_df = df if selected_operator == "All" else df[df["agency_name"] == selected_operator]

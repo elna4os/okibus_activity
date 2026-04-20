@@ -1,0 +1,40 @@
+name: Update GTFS data
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"  # 1st of every month at 00:00 UTC
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download GTFS feeds
+        run: python scripts/download_gtfs.py
+
+      - name: Prepare data
+        run: python scripts/prepare_data.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/trips.parquet
+          git diff --cached --quiet || git commit -m "chore: update trips data [$(date +'%Y-%m-%d')]"
+          git push
